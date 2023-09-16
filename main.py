@@ -40,15 +40,22 @@ class CrashSinal:
 
     def ultimos_resultados(self):
         try:
-            api_texto = json.loads(requests.get(API_CRASH).text)
+            response = requests.get(API_CRASH)
+            response.raise_for_status()
+
+            api_texto = json.loads(response.text)
 
             resultados = []
             for i in api_texto:
                 resultados.append(float(i["crash_point"]))
-            return (resultados[:6])
+            return resultados[:6]
 
-        except:
-            print("Falha na requisição")
+        except requests.exceptions.RequestException as e:
+            print(f"Erro na solicitação: {e}")
+            return None
+        except json.JSONDecodeError as e:
+            print(f"Erro ao analisar JSON: {e}")
+            return None
 
     def estrategia(self, resultados):
         print(resultados)
@@ -56,25 +63,27 @@ class CrashSinal:
             self.checar_resultado(resultados[0])
             return
 
-        if resultados[0] < 2.0 and resultados[1]:
+        if resultados[0] < 2.0 and resultados[1] < 2.0 and resultados[2] < 2.0:
             print("Entrada Confirmada!")
             self.alvo = 2
             self.gales = 1
             self.sinal_entrada(resultados[0])
             return
 
-        if resultados[0] < 2.0:
+        if resultados[0] < 2.0 and resultados[1] < 2.0:
+            print("Sinal BBB-G!")
             self.alerta_entrada()
             return
 
-        if resultados[0] >= 2.0 and resultados[1]:
+        if resultados[0] < 2.0 and resultados[1] >= 2.0 and resultados[2] < 2.0 and resultados[3] >= 2.0:
             print("Entrada Confirmada!")
             self.alvo = 2
             self.gales = 1
             self.sinal_entrada(resultados[0])
             return
 
-        if resultados[0] >= 2.0:
+        if resultados[0] >= 2.0 and resultados[1] < 2.0 and resultados[2] >= 2.0:
+            print("Sinal GBGB-G!")
             self.alerta_entrada()
             return
 
